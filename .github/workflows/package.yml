@@ -1,0 +1,74 @@
+name: Package CyberCore
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_NAME: CyberCore
+  BUILD_ARGS: clean shadowJar
+  JAR_SEARCH_DIR: build/libs
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build with Gradle
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon $BUILD_ARGS
+
+      - name: Prepare jar
+        id: artifact
+        shell: bash
+        run: |
+          VERSION=$(./gradlew --no-daemon -q properties --property version | awk -F': ' '$1 == "version" { print $2; exit }')
+          EXPECTED_JAR="${JAR_SEARCH_DIR}/${PROJECT_NAME}-${VERSION}.jar"
+          JAR_SOURCE=""
+
+          if [ -f "$EXPECTED_JAR" ]; then
+            JAR_SOURCE="$EXPECTED_JAR"
+          else
+            mapfile -t JARS < <(find "$JAR_SEARCH_DIR" -maxdepth 1 -type f -name "*.jar" ! -name "*-sources.jar" ! -name "*-javadoc.jar" ! -name "*-all.jar" | sort)
+            JAR_SOURCE="${JARS[0]:-}"
+          fi
+
+          if [ -z "$JAR_SOURCE" ] || [ ! -f "$JAR_SOURCE" ]; then
+            echo "Could not find final jar in $JAR_SEARCH_DIR."
+            find "$JAR_SEARCH_DIR" -maxdepth 1 -type f -name "*.jar" -print || true
+            exit 1
+          fi
+
+          mkdir -p release-artifact
+          JAR_PATH="release-artifact/${PROJECT_NAME}-${VERSION}.jar"
+          cp "$JAR_SOURCE" "$JAR_PATH"
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "path=$JAR_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Upload jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME }}-${{ steps.artifact.outputs.version }}
+          path: ${{ steps.artifact.outputs.path }}
+          if-no-files-found: error
+          retention-days: 7
