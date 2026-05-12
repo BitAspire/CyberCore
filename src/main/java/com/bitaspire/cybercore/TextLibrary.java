@@ -1,15 +1,14 @@
 package com.bitaspire.cybercore;
 
+import me.croabeast.file.ConfigurableFile;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.logger.TakionLogger;
-import org.bukkit.configuration.ConfigurationSection;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.TreeMap;
+import java.util.function.BooleanSupplier;
 
 final class TextLibrary extends TakionLib {
 
-    private final CyberCore core;
+    final CyberCore core;
 
     TextLibrary(CyberCore core) {
         super(core.getPlugin());
@@ -18,22 +17,31 @@ final class TextLibrary extends TakionLib {
         setLangPrefix("&8&lCCR &8» &r");
         setLangPrefixKey("{p}");
 
+        getChannelManager().identify("action_bar").addPrefix("actionbar");
+        getChannelManager().identify("action_bar").addPrefix("action-bar");
+    }
+
+    void load(BooleanSupplier supplier) {
+        BooleanSupplier colored;
+        try {
+            ConfigurableFile file = core.getFileManager().get("config");
+            colored = () -> file.get("config.console-color", true);
+        } catch (NullPointerException e) {
+            colored = supplier != null ? supplier : () -> true;
+        }
+
+        BooleanSupplier finalSupplier = colored;
         setLogger(new TakionLogger(this) {
             @Override
             public boolean isColored() {
-                return core.getFileManager().get("config").get("config.console-color", true);
+                return finalSupplier.getAsBoolean();
             }
         });
         setServerLogger(new TakionLogger(this, false) {
             @Override
             public boolean isColored() {
-                return core.getFileManager().get("config").get("config.console-color", true);
+                return finalSupplier.getAsBoolean();
             }
         });
-    }
-
-    @NotNull
-    public TreeMap<String, ConfigurationSection> getLoadedWebhooks() {
-        return loadMapFromConfiguration(core.getFileManager().get("lang").getSection("webhooks"));
     }
 }

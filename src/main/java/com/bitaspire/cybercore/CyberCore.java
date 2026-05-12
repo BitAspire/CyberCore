@@ -1,19 +1,24 @@
 package com.bitaspire.cybercore;
 
+import com.bitaspire.cybercore.file.FileManager;
 import lombok.AccessLevel;
 import lombok.Getter;
 import me.croabeast.takion.TakionLib;
-import com.bitaspire.cybercore.file.FileManager;
-import org.bukkit.Bukkit;
+import me.croabeast.vnc.VNC;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
+import java.util.function.BooleanSupplier;
 
 @Getter
 public final class CyberCore {
 
     private final JavaPlugin plugin;
-    private final TakionLib library;
+    private final TextLibrary library;
 
     private final FileManager fileManager;
     private final CoreSettings settings;
@@ -24,29 +29,35 @@ public final class CyberCore {
     public CyberCore(JavaPlugin plugin) {
         this.plugin = plugin;
 
-        fileManager = new FileManagerImpl(this);
         library = new TextLibrary(this);
+        fileManager = new FileManager(this);
         settings = new CoreSettings(this);
 
         bootStart = System.currentTimeMillis();
     }
 
     private void loadTPS() {
-        Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, Lag.initialize(), 100L, 1L);
+        library.getScheduler().runTaskTimer(Lag.initialize(), 100L, 1L);
     }
 
     public void loadFiles(boolean header, String... additionalFiles) {
         if (header) settings.sendBootHeader();
-        fileManager.loadAll(additionalFiles);
+        fileManager.load(additionalFiles);
     }
 
-    public void loadStart(boolean loadFiles, String additionalFiles) {
+    public void setColoredSupplier(BooleanSupplier supplier) {
+        library.load(supplier);
+    }
+
+    public void loadStart(boolean loadFiles, String... additionalFiles) {
         settings.sendBootHeader();
-        if (loadFiles) loadFiles(false, additionalFiles);
+        if (loadFiles)
+            loadFiles(false, additionalFiles);
+        setColoredSupplier(null);
         loadTPS();
     }
 
-    public void loadStart(String additionalFiles) {
+    public void loadStart(String... additionalFiles) {
         loadStart(true, additionalFiles);
     }
 
@@ -61,9 +72,53 @@ public final class CyberCore {
         library.getServerLogger().log(settings.getBootBar());
     }
 
+    @NotNull
+    public TakionLib getLibrary() {
+        return library;
+    }
+
     @ApiStatus.ScheduledForRemoval(inVersion = "2.0")
     @Deprecated
     public void logger(String... lines) {
         library.getServerLogger().log(lines);
+    }
+
+    @ApiStatus.ScheduledForRemoval(inVersion = "2.0")
+    @Deprecated
+    public static double getMainVersion() {
+        return VNC.SERVER_VERSION;
+    }
+
+    @ApiStatus.ScheduledForRemoval(inVersion = "2.0")
+    @Deprecated
+    public static int getMajorVersion() {
+        return (int) getMainVersion();
+    }
+
+    public static boolean restrictVersions(String minVersion, String maxVersion, String pluginPrefix, String pluginVersion) {
+        int minCompare = VNC.compare(VNC.SERVER_MINECRAFT_VERSION, minVersion);
+        int maxCompare = VNC.compare(VNC.SERVER_MINECRAFT_VERSION, maxVersion);
+
+        if (minCompare >= 0 && maxCompare <= 0)
+            return false;
+
+        TakionLib.getLib().getServerLogger().log(
+                pluginPrefix + " v" + pluginVersion +
+                        " does not support " +
+                        VNC.SERVER_CLASSIC_VERSION + " and " +
+                        (minCompare < 0 ?
+                                "older!" :
+                                "newer. Please update!")
+        );
+        return true;
+    }
+
+    public static boolean restrictVersions(int minVersion, int maxVersion, String pluginPrefix, String pluginVersion) {
+        return restrictVersions("1." + minVersion, "1." + maxVersion, pluginPrefix, pluginVersion);
+    }
+
+    public static boolean restrictVersions(int minVersion, int maxVersion, Plugin plugin) {
+        String prefix = Objects.requireNonNull(plugin).getDescription().getPrefix();
+        return restrictVersions(minVersion, maxVersion, prefix == null ? plugin.getName() : prefix, plugin.getDescription().getVersion());
     }
 }

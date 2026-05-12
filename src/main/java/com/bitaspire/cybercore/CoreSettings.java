@@ -1,8 +1,8 @@
 package com.bitaspire.cybercore;
 
 import lombok.Setter;
-import me.croabeast.common.util.ServerInfoUtils;
 import me.croabeast.takion.logger.TakionLogger;
+import me.croabeast.vnc.VNC;
 import org.apache.commons.lang.SystemUtils;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +51,7 @@ public class CoreSettings {
     }
 
     private boolean useLegacy() {
-        return SystemUtils.OS_NAME.contains("Windows") && ServerInfoUtils.SERVER_VERSION < 12;
+        return SystemUtils.OS_NAME.contains("Windows") && VNC.isBefore("1.12");
     }
 
     private String[] getBaseLogo() {
