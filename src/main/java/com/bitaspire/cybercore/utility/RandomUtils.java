@@ -1,14 +1,13 @@
-package com.bitaspire.cybercore.util;
+package com.bitaspire.cybercore.utility;
 
 import lombok.experimental.UtilityClass;
 
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 @UtilityClass
 public class RandomUtils {
 
-    private final Random CURRENT_RANDOM = ThreadLocalRandom.current();
+    private final ThreadLocalRandom CURRENT_RANDOM = ThreadLocalRandom.current();
 
     public double randomDouble() {
         return CURRENT_RANDOM.nextDouble();
