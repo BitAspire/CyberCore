@@ -93,6 +93,25 @@ tasks.build {
     dependsOn("shadowJar")
 }
 
+// Consumers compile against the relocated packages (com.bitaspire.libs.*), which only exist in the
+// shaded jar. Composite builds hand over a project's plain classes by default, so the outgoing
+// artifact is swapped here; otherwise every plugin that includes this build stops resolving its
+// imports the moment it switches from the copied jar to the substitution.
+configurations {
+    // The secondary "classes" variant has to go too: compile classpaths prefer it over the jar for
+    // compile avoidance, and it points at the unrelocated build/classes directory.
+    apiElements {
+        outgoing.artifacts.clear()
+        outgoing.variants.removeIf { true }
+        outgoing.artifact(tasks.named<ShadowJar>("shadowJar"))
+    }
+    runtimeElements {
+        outgoing.artifacts.clear()
+        outgoing.variants.removeIf { true }
+        outgoing.artifact(tasks.named<ShadowJar>("shadowJar"))
+    }
+}
+
 val buildTakionShadowJar by tasks.registering(Exec::class) {
     group = "build"
     description = "Builds the local Takion shaded jar with the all classifier used by CyberCore."
