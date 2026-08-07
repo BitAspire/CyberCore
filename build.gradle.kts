@@ -31,6 +31,18 @@ dependencies {
     implementation("me.croabeast.takion:shaded:2.0.0:all")
     implementation("commons-lang:commons-lang:2.6")
     implementation("org.bstats:bstats-bukkit:3.0.2")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    testImplementation("org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT")
+}
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("failed")
+    }
 }
 
 java {
