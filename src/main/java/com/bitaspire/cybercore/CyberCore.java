@@ -73,7 +73,7 @@ public final class CyberCore {
     }
 
     @NotNull
-    public TakionLib getLibrary() {
+    public TextLibrary getLibrary() {
         return library;
     }
 
