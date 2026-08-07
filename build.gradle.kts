@@ -28,7 +28,7 @@ dependencies {
 
     compileOnly("org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT")
 
-    implementation("me.croabeast.takion:shaded:1.6.0:all")
+    implementation("me.croabeast.takion:shaded:2.0.0:all")
     implementation("commons-lang:commons-lang:2.6")
     implementation("org.bstats:bstats-bukkit:3.0.2")
 }
