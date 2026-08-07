@@ -100,12 +100,18 @@ tasks.build {
 configurations {
     // The secondary "classes" variant has to go too: compile classpaths prefer it over the jar for
     // compile avoidance, and it points at the unrelocated build/classes directory.
+    //
+    // setExtendsFrom(emptySet()) stops advertising the dependencies: the shaded jar already carries
+    // them relocated, so a consumer that also resolved them would shade a second, unrelocated copy
+    // of Takion, Prismatic, VNC and friends into its own jar.
     apiElements {
+        setExtendsFrom(emptySet())
         outgoing.artifacts.clear()
         outgoing.variants.removeIf { true }
         outgoing.artifact(tasks.named<ShadowJar>("shadowJar"))
     }
     runtimeElements {
+        setExtendsFrom(emptySet())
         outgoing.artifacts.clear()
         outgoing.variants.removeIf { true }
         outgoing.artifact(tasks.named<ShadowJar>("shadowJar"))
