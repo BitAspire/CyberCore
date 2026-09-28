@@ -30,7 +30,7 @@ dependencies {
 
     api("me.croabeast.takion:shaded:2.0.5:all")
     implementation("commons-lang:commons-lang:2.6")
-    implementation("org.bstats:bstats-bukkit:3.0.2")
+    implementation("org.bstats:bstats-bukkit:3.2.1")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
