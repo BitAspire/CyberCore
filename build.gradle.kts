@@ -74,7 +74,6 @@ tasks.withType<JavaCompile>().configureEach {
 tasks.withType<ShadowJar>().configureEach {
     archiveClassifier.set("")
 
-    relocate("com.github.stefvanschie.inventoryframework", "com.bitaspire.libs.inventory")
     relocate("me.croabeast", "com.bitaspire.libs")
     relocate("com.mojang", "com.bitaspire.libs.mojang")
 
